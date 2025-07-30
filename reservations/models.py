@@ -2,7 +2,7 @@ from django.db import models
 from users.models import User
 from books.models import Book
 from django.utils import timezone
-from datetime import timedelta
+from datetime import date, timedelta
 
 # Create your models here.
 class Reservation(models.Model):
@@ -13,7 +13,8 @@ class Reservation(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.reservation_due_date:
-            self.reservation_due_date = self.reservation_date + timedelta(days=7)  # 1주일 유지
+            self.reservation_date = date.today()
+        self.reservation_due_date = self.reservation_date + timedelta(days=7)  # 1주일 유지
         super().save(*args, **kwargs)
 
     def __str__(self):
