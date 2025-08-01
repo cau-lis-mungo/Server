@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 
 # Create your models here.
 class Book(models.Model):
@@ -19,6 +20,12 @@ class Book(models.Model):
     desc = models.TextField(null=True, blank=True)  # 총서사항
     book_status = models.CharField(max_length=20, choices=BOOK_STATUS_CHOICES, default='대출가능')  # 도서 상태
     image = models.ImageField(upload_to='book_images/', null=True, blank=True)  # 표지 이미지
+
+    liked_users = models.ManyToManyField( # 좋아요
+        settings.AUTH_USER_MODEL,
+        related_name='liked_books',
+        blank=True
+    )
 
     def __str__(self):
         return f"{self.title} ({self.book_code})"

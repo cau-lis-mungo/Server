@@ -63,7 +63,7 @@ PROJECT_APPS = [
     'books',
     'users',
     'reviews',
-    'likes',
+    # 'likes',
     'reservations',
     'rentals',
 ]
