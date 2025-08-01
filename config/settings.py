@@ -62,7 +62,10 @@ DJANGO_APPS = [
 PROJECT_APPS = [
     'books',
     'users',
-
+    'reviews',
+    'likes',
+    'reservations',
+    'rentals',
 ]
 
 THIRD_PARTY_APPS = [
@@ -171,3 +174,6 @@ SIMPLE_JWT = {
     'BLACKLIST_AFTER_ROTATION': False,
     'TOKEN_USER_CLASS': 'accounts.User',
 }
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
