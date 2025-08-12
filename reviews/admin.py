@@ -2,7 +2,9 @@ from django.contrib import admin
 from .models import Review
 
 # Register your models here.
+
 admin.site.register(Review)
+
 class ReviewAdmin(admin.ModelAdmin):
     list_display = ['book', 'user', 'rating', 'get_rating_stars', 'created_at']
     list_filter = ['rating', 'created_at', 'book__category']
