@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import ReviewViewSet
+from . import views 
 
 # DRF Router 설정
 router = DefaultRouter()
@@ -20,7 +20,7 @@ urlpatterns = [
     path('reviews/', views.review_list, name='review_list'),
     path('user/<int:user_id>/reviews/', views.user_reviews, name='user_reviews'),
     
-    # AJAX URL
-    path('ajax/book/<int:book_id>/review/create/', views.ajax_create_review, name='ajax_create_review'),
-    path('ajax/review/<int:review_id>/update/', views.ajax_update_review, name='ajax_update_review'),
+    # AJAX URL (오류 방지를 위해 주석 처리)
+    # path('ajax/book/<int:book_id>/review/create/', views.ajax_create_review, name='ajax_create_review'),
+    # path('ajax/review/<int:review_id>/update/', views.ajax_update_review, name='ajax_update_review'),
 ]

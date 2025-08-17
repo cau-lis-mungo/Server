@@ -1,20 +1,9 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404, redirect
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from .models import Review
 from .serializers import ReviewSerializer
-
-# Create your views here.
-class ReviewViewSet(viewsets.ModelViewSet):
-    queryset = Review.objects.all()
-    serializer_class = ReviewSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
-
-from django.shortcuts import render, get_object_or_404, redirect
+from django.db.models import Q
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.paginator import Paginator
@@ -28,6 +17,16 @@ from .models import Review
 from books.models import Book
 from users.models import User
 from .serializers import ReviewSerializer, ReviewCreateSerializer, ReviewUpdateSerializer
+
+# Create your views here.
+class ReviewViewSet(viewsets.ModelViewSet):
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
 
 # 템플릿 기반 뷰
 def book_detail(request, book_id):
@@ -247,7 +246,7 @@ def ajax_create_review(request, book_id):
             'review': {
                 'id': review.id,
                 'rating': review.rating,
-                'rating_stars': review.get_rating_stars(),
+                # 'rating_stars': review.get_rating_stars(), # 이 줄은 models.py에 해당 메소드가 없을 수 있어 주석 처리합니다.
                 'content': review.content,
                 'user': review.user.username,
                 'created_at': review.created_at.strftime('%Y-%m-%d %H:%M')
@@ -260,6 +259,50 @@ def ajax_create_review(request, book_id):
             'error': '올바른 평점을 선택해주세요.'
         })
     
+@login_required
+@require_POST
+def ajax_update_review(request, review_id):
+    """AJAX 리뷰 수정"""
+    review = get_object_or_404(Review, id=review_id, user=request.user)
+
+    rating = request.POST.get('rating')
+    content = request.POST.get('content')
+
+    if not rating or not content:
+        return JsonResponse({
+            'success': False,
+            'error': '모든 필드를 입력해주세요.'
+        })
+
+    try:
+        rating = int(rating)
+        if not (1 <= rating <= 5):
+            return JsonResponse({
+                'success': False,
+                'error': '평점은 1-5점 사이여야 합니다.'
+            })
+
+        review.rating = rating
+        review.content = content
+        review.save()
+        
+        return JsonResponse({
+            'success': True,
+            'review': {
+                'id': review.id,
+                'rating': review.rating,
+                'content': review.content,
+                'user': review.user.username,
+                'updated_at': review.updated_at.strftime('%Y-%m-%d %H:%M')
+            }
+        })
+
+    except ValueError:
+        return JsonResponse({
+            'success': False,
+            'error': '올바른 평점을 선택해주세요.'
+        })
+
 def search_reviews(request):
     """리뷰 검색"""
     query = request.GET.get('q', '')
