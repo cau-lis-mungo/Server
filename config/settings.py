@@ -15,9 +15,6 @@ import os, json
 from django.core.exceptions import ImproperlyConfigured
 from datetime import timedelta
 
-# 사용자가 동시에 가질 수 있는 유효(만료되지 않은 ACTIVE) 예약 최대 개수
-RESERVATION_LIMIT_PER_USER = 3
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -182,3 +179,11 @@ SIMPLE_JWT = {
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# RENTALS
+RENTAL_DAYS = 14
+RENTAL_LIMIT_PER_USER = 5
+
+# RESERVATION
+RESERVATION_LIMIT_PER_USER = 3
+RESERVATION_DAYS = 7

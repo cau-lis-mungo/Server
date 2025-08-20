@@ -4,6 +4,12 @@ from datetime import date
 from books.models import Book
 
 # Create your models here.
+def _rental_days() -> int:
+    return getattr(settings, "RENTAL_DAYS", 14)  # 기본 14일
+
+def _rental_limit() -> int:
+    return getattr(settings, "RENTAL_LIMIT_PER_USER", 5)
+
 class Rental(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
@@ -12,6 +18,16 @@ class Rental(models.Model):
     due_date = models.DateField() # 반납예정일
     return_date = models.DateField(null=True, blank=True) # 반납일
     is_returned = models.BooleanField(default=False) # 반납여부
+
+    class Meta:
+        # 같은 책에 대한 대출 1건만 허용
+        constraints = [
+            models.UniqueConstraint(
+                fields=["book", "is_returned"],
+                condition=models.Q(is_returned=False),
+                name="uq_active_rental_per_book"
+            )
+        ]
 
     @property
     def is_overdue(self): # 연체여부
