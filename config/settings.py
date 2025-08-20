@@ -15,6 +15,9 @@ import os, json
 from django.core.exceptions import ImproperlyConfigured
 from datetime import timedelta
 
+# 사용자가 동시에 가질 수 있는 유효(만료되지 않은 ACTIVE) 예약 최대 개수
+RESERVATION_LIMIT_PER_USER = 3
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -174,7 +177,7 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7), # 유효기간 7일
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': False,
-    'TOKEN_USER_CLASS': 'accounts.User',
+    'TOKEN_USER_CLASS': 'users.User',
 }
 
 MEDIA_URL = '/media/'
