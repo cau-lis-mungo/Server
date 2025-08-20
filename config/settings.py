@@ -69,8 +69,10 @@ PROJECT_APPS = [
 ]
 
 THIRD_PARTY_APPS = [
+    'rest_framework',              
     'rest_framework_simplejwt',
 ]
+
 
 
 INSTALLED_APPS = DJANGO_APPS + PROJECT_APPS + THIRD_PARTY_APPS
@@ -172,8 +174,16 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7), # 유효기간 7일
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': False,
-    'TOKEN_USER_CLASS': 'accounts.User',
+    'TOKEN_USER_CLASS': 'users.User',
 }
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# RENTALS
+RENTAL_DAYS = 14
+RENTAL_LIMIT_PER_USER = 5
+
+# RESERVATION
+RESERVATION_LIMIT_PER_USER = 3
+RESERVATION_DAYS = 7

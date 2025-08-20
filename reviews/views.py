@@ -1,8 +1,4 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
-from .models import Review
-from .serializers import ReviewSerializer
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -18,15 +14,29 @@ from books.models import Book
 from users.models import User
 from .serializers import ReviewSerializer, ReviewCreateSerializer, ReviewUpdateSerializer
 
-# Create your views here.
 class ReviewViewSet(viewsets.ModelViewSet):
     queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
+    pagination_class = SizedPageNumberPagination
+    filter_backends = [OrderingFilter]
+    ordering_fields = ["created_at"]  
+    ordering = ["-created_at"]                  
+
+    def get_queryset(self) -> QuerySet:
+        qs = super().get_queryset().select_related("user", "book")
+
+        user_id = self.request.query_params.get("userId")
+        book_id = self.request.query_params.get("bookId")
+        if user_id:
+            qs = qs.filter(user_id=user_id)
+        if book_id:
+            qs = qs.filter(book_id=book_id)
+        return qs
+
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
-
 
 # 템플릿 기반 뷰
 def book_detail(request, book_id):
