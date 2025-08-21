@@ -1,4 +1,5 @@
 from django.db import models
+from django.core.serializers.json import DjangoJSONEncoder
 from django.conf import settings
 
 # Create your models here.
@@ -33,6 +34,8 @@ class Book(models.Model):
 
 class Marc(models.Model):
     book = models.OneToOneField(Book, on_delete=models.CASCADE, related_name='marc')
+    data = models.JSONField("MARC JSON", default=dict, blank=True, encoder=DjangoJSONEncoder)
+
 
     field_020        = models.CharField("020", max_length=32, null=True, blank=True)
     field_020_set    = models.CharField("020(세트)", max_length=32, null=True, blank=True)
@@ -76,6 +79,66 @@ class Marc(models.Model):
 
     def __str__(self):
         return f"{self.book.title}"
+    
+    def build_json(self):
+        j = {}
+
+        def put(tag, key, val):
+            if not val:
+                return
+            j.setdefault(tag, {})
+            j[tag][key] = val
+
+        # 020
+        put("020", "a", self.field_020)
+        put("020", "set", self.field_020_set)
+
+        # 단일 텍스트/문자열 계열
+        simple_map = {
+            "022": self.field_022,
+            "052": self.field_052,
+            "090": self.field_090,
+            "245": self.field_245,
+            "250": self.field_250,
+            "260": self.field_260,  # 발행사항(장소 : 출판사, 연도)
+            "300": self.field_300,  # 형태사항
+            "310": self.field_310,
+            "342": self.field_342,
+            "490": self.field_490,
+            "500": self.field_500,
+            "502": self.field_502,
+            "504": self.field_504,
+            "541": self.field_541,
+            "546": self.field_546,
+            "586": self.field_586,
+            "590": self.field_590,
+            "600": self.field_600,
+            "610": self.field_610,
+            "647": self.field_647,
+            "650": self.field_650,
+            "653": self.field_653,
+            "655": self.field_655,
+            "700": self.field_700,
+            "710": self.field_710,
+            "720": self.field_720,
+            "730": self.field_730,
+            "856": self.field_856,
+        }
+        for tag, val in simple_map.items():
+            put(tag, "a", val)
+
+        # 246
+        if self.field_246_same:
+            put("246", "parallel_title", self.field_246_same)
+        if self.field_246_origin:
+            put("246", "original_title", self.field_246_origin)
+
+        return j
+
+    def save(self, *args, **kwargs):
+        # save 시 JSON 동기화
+        self.data = self.build_json()
+        super().save(*args, **kwargs)
 
 class TargetName(models.Model):
     name = models.CharField("이용자 대상 주기 전거표", max_length=200, unique=True)
