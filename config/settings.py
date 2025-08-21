@@ -43,7 +43,7 @@ SECRET_KEY = get_secret("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -71,17 +71,19 @@ PROJECT_APPS = [
 THIRD_PARTY_APPS = [
     'rest_framework',              
     'rest_framework_simplejwt',
+    "django_filters",
+    "corsheaders",
+
 ]
-
-
 
 INSTALLED_APPS = DJANGO_APPS + PROJECT_APPS + THIRD_PARTY_APPS
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -136,6 +138,12 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOWED_ORIGINS = [ 
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
@@ -166,6 +174,28 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
 }
+# REST_FRAMEWORK = {
+#     # 인증 방식
+#     "DEFAULT_AUTHENTICATION_CLASSES": (
+#         "rest_framework_simplejwt.authentication.JWTAuthentication",
+#     ),
+
+#     # 권한 기본값
+#     "DEFAULT_PERMISSION_CLASSES": [
+#         "rest_framework.permissions.IsAuthenticatedOrReadOnly",
+#     ],
+
+#     # 페이지네이션
+#     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+#     "PAGE_SIZE": 10,
+
+#     # 필터/검색/정렬
+#     "DEFAULT_FILTER_BACKENDS": [
+#         "django_filters.rest_framework.DjangoFilterBackend",
+#         "rest_framework.filters.OrderingFilter",
+#         "rest_framework.filters.SearchFilter",
+#     ],
+# }
 
 REST_USE_JWT = True
 
