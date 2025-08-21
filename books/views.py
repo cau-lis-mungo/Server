@@ -6,6 +6,9 @@ from rest_framework import status, viewsets, filters
 from .models import Book
 from .serializers import BookSerializer
 
+from django.core.files.storage import default_storage  
+from django.conf import settings
+import boto3
 
 # Create your views here.
 # 좋아요
@@ -33,4 +36,4 @@ class BookViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     filter_backends = [filters.SearchFilter]
-    search_fields = ['title', 'author', 'isbn']  
+    search_fields = ['title', 'author', 'isbn']
