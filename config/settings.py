@@ -14,8 +14,8 @@ from pathlib import Path
 import os, json
 from django.core.exceptions import ImproperlyConfigured
 from datetime import timedelta
-
-BASE_DIR = Path(__file__).resolve().parent.parent
+import pymysql
+pymysql.install_as_MySQLdb()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -73,7 +73,7 @@ THIRD_PARTY_APPS = [
     'rest_framework_simplejwt',
     "django_filters",
     "corsheaders",
-
+    "storages",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + PROJECT_APPS + THIRD_PARTY_APPS
@@ -119,21 +119,24 @@ WSGI_APPLICATION = 'config.wsgi.application'
 #     }
 # }
 
+DB_PW = get_secret("DB_PW")
+RDS_HOST = get_secret('RDS_HOST')
+
 DATABASES = {
 	'default': {
 		'ENGINE': 'django.db.backends.mysql',
-		'NAME': get_secret('DB_NAME'),
-		'USER': get_secret('DB_USER'),
-		'PASSWORD': get_secret('DB_PW'),
-		'HOST': get_secret('DB_HOST'),
-        # 'HOST': '127.0.0.1',
+		'NAME': 'mungo',
+        # 'USER' : 'root',
+		'USER': 'admin',
+        # 'PASSWORD':
+		'PASSWORD': DB_PW,
+		# 'HOST': 'localhost',
+        'HOST': '127.0.0.1',
+        # 'HOST': RDS_HOST,
 		'PORT': '3306',
-                'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"
-        },
+        # 'PORT': '3307',
 	}
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -163,13 +166,13 @@ CORS_ALLOWED_ORIGINS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'ko-kr'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Seoul'
 
 USE_I18N = True
 
-USE_TZ = True
+USE_TZ = False
 
 
 # Static files (CSS, JavaScript, Images)
@@ -232,3 +235,9 @@ RENTAL_LIMIT_PER_USER = 5
 # RESERVATION
 RESERVATION_LIMIT_PER_USER = 3
 RESERVATION_DAYS = 7
+
+
+# S3
+DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+AWS_STORAGE_BUCKET_NAME = "cau-lis-mungo"
+AWS_S3_REGION_NAME = "ap-northeast-2"
