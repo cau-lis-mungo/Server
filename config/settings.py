@@ -131,8 +131,8 @@ DATABASES = {
         # 'PASSWORD':
 		'PASSWORD': DB_PW,
 		# 'HOST': 'localhost',
-        'HOST': '127.0.0.1',
-        # 'HOST': RDS_HOST,
+        # 'HOST': '127.0.0.1',
+        'HOST': RDS_HOST,
 		'PORT': '3306',
         # 'PORT': '3307',
 	}
