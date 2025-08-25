@@ -3,8 +3,8 @@ from django.conf import settings
 from django.utils import timezone
 from django.db import transaction
 from rest_framework import serializers
-from rest_framework.response import Response
 from .models import Rental
+from reservations.models import Reservation
 from books.models import Book
 
 # 대출가능일
@@ -24,9 +24,7 @@ class RentalListSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Rental
-        fields = (
-            "id", "book",
-        )
+        fields = ("id", "book",)
 
 class RentalSerializer(serializers.ModelSerializer):
     is_overdue = serializers.SerializerMethodField()
@@ -37,7 +35,7 @@ class RentalSerializer(serializers.ModelSerializer):
         fields = "__all__"
         read_only_fields = (
             "user", "rental_date", "return_date", "is_returned", "due_date",
-            "is_overdue", "overdue_days",
+            "is_overdue", "overdue_days", "book_status",
         )
 
     def get_is_overdue(self, obj): return obj.is_overdue
@@ -106,32 +104,44 @@ class RentalUpdateSerializer(serializers.ModelSerializer):
         # 반납만 허용
         if want_return is not True:
             raise serializers.ValidationError({"message" : "이미 반납되었습니다."})
-
         if instance.is_returned:
             raise serializers.ValidationError({"message" : "이미 반납되었습니다."})
-
         return attrs
 
+    @transaction.atomic
     def update(self, instance: Rental, validated_data):
+        # 반납
         instance.is_returned = True
         instance.return_date = timezone.localdate()
         instance.save(update_fields=["is_returned", "return_date"])
 
-        # 예약 확인
+        # 예약
         book = instance.book
-        next_status = "대출가능"
-        # 예약 있으면
+        RES_DAYS = getattr(settings, "RESERVATION_DAYS", 3)
+
         try:
-            from reservations.models import Reservation
-            has_waiter = Reservation.objects.filter(book=book, status="ACTIVE").exists()
-            if has_waiter:
-                next_status = "예약중"
-        # 예약 없으면
+            target = (
+                Reservation.objects.active()
+                .filter(book=book)
+                .order_by("reservation_date")
+                .first()
+            )
         except Exception:
-            pass
+            target = None
 
-        if hasattr(book, "book_status"):
-            book.book_status = next_status
-            book.save(update_fields=["book_status"])
+        if target:
+            # 예약만기일 부여
+            target.due_date = timezone.localdate() + timedelta(days=RES_DAYS)
+            target.save(update_fields=["due_date"])
 
-        return instance
+            # 예약자 있으면
+            if hasattr(book, "book_status") and book.book_status != "예약중":
+                book.book_status = "예약중"
+                book.save(update_fields=["book_status"])
+        else:
+            # 예약자 없으면
+            if hasattr(book, "book_status") and book.book_status != "대출가능":
+                book.book_status = "대출가능"
+                book.save(update_fields=["book_status"])
+
+            return instance

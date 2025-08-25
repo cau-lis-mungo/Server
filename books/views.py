@@ -1,10 +1,14 @@
 from django.shortcuts import render
+from django.core.exceptions import ValidationError
+from rest_framework.decorators import action
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
-from rest_framework import status, viewsets, filters
+from rest_framework import status, viewsets, filters, permissions, serializers
 from .models import Book
+from reservations.models import Reservation
 from .serializers import BookSerializer, BookDetailSerializer
+from reservations.serializers import ReservationSerializer
 
 # Create your views here.
 # 좋아요
@@ -28,7 +32,7 @@ class BookLikedView(APIView):
 # 목록 + 상세
 class BookViewSet(viewsets.ModelViewSet):
     queryset = Book.objects.all()
-    serializer_class = BookSerializer
+    # serializer_class = BookSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     filter_backends = [filters.SearchFilter]
@@ -38,3 +42,22 @@ class BookViewSet(viewsets.ModelViewSet):
         if self.action == 'retrieve':
             return BookDetailSerializer
         return BookSerializer
+    
+    @action(detail=True, methods=["post"], permission_classes=[permissions.IsAuthenticated], url_path="reserve")
+    def reserve(self, request, pk=None):
+        book = self.get_object()
+        user = request.user
+
+        if Reservation.objects.filter(user=user, book=book, status="ACTIVE").exists():
+            raise serializers.ValidationError({"message": "이미 예약하셨습니다."})
+
+        instance = Reservation(user=user, book=book)
+        try:
+            instance.full_clean()
+        except ValidationError as e:
+            detail = getattr(e, "message_dict", None) or {"message": e.messages}
+            return Response(detail, status=status.HTTP_400_BAD_REQUEST)
+
+        instance.save()
+        return Response(ReservationSerializer(instance, context={"request": request}).data,
+                        status=status.HTTP_201_CREATED)
