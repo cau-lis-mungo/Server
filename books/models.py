@@ -5,10 +5,10 @@ from django.conf import settings
 # Create your models here.
 class Book(models.Model):
     BOOK_STATUS_CHOICES = [
-        ('대출가능', '대출가능'),
-        ('대출중', '대출중'),
-        ('예약중', '예약중'),
-        ('대출불가', '대출불가'),
+        ('AVAILABLE', '대출가능'),
+        ('RENTED', '대출중'),
+        ('RESERVED', '예약중'),
+        ('UNAVAILABLE', '대출불가'),
     ]
 
     book_code = models.CharField(max_length=30, unique=True) # 장서등록번호
@@ -20,7 +20,7 @@ class Book(models.Model):
     location = models.CharField(max_length=200, blank=True, null=True) # 위치
     edition = models.CharField(max_length=100, null=True, blank=True) # 판사항
     desc = models.TextField(null=True, blank=True) # 총서사항
-    book_status = models.CharField(max_length=20, choices=BOOK_STATUS_CHOICES, default='대출가능')  # 도서 상태
+    book_status = models.CharField(max_length=20, choices=BOOK_STATUS_CHOICES, default='AVAILABLE')  # 도서 상태
     image = models.ImageField(upload_to='book_images/', null=True, blank=True)  # 표지 이미지
 
     liked_users = models.ManyToManyField( # 좋아요
@@ -100,8 +100,8 @@ class Marc(models.Model):
             "090": self.field_090,
             "245": self.field_245,
             "250": self.field_250,
-            "260": self.field_260,  # 발행사항(장소 : 출판사, 연도)
-            "300": self.field_300,  # 형태사항
+            "260": self.field_260,
+            "300": self.field_300,
             "310": self.field_310,
             "342": self.field_342,
             "490": self.field_490,

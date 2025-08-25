@@ -19,8 +19,8 @@ class Review(models.Model):
     class Meta:
         unique_together = ('book', 'user')  # 한 사용자당 한 책에 하나의 리뷰만
         ordering = ['-created_at']  # 최신순으로 정렬
-        verbose_name = "리뷰"
-        verbose_name_plural = "리뷰들"
+        verbose_name = "Review"
+        verbose_name_plural = "Reviews"
 
     def __str__(self):
         return f"{self.book.title} - {self.user.username}"
