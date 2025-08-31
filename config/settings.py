@@ -241,6 +241,16 @@ RENTAL_LIMIT_PER_USER = 5
 RESERVATION_LIMIT_PER_USER = 3
 RESERVATION_DAYS = 7
 
+# DRF Throttle
+REST_FRAMEWORK = {
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.ScopedRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "find_username": "5/min", # 1분당 5회 허용
+    },
+}
+
 
 # S3
 DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
