@@ -52,9 +52,19 @@ class UserUpdateSerializer(serializers.ModelSerializer):
     # username은 수정 불가
     username = serializers.ReadOnlyField()
 
-    name = serializers.CharField(required=False)
-    phone = serializers.CharField(required=False)
-    user_type = serializers.ChoiceField(required=False, choices=User.USER_TYPE_CHOICES)
+    name = serializers.CharField(
+        required=True,
+        error_messages={"required": "이름을 입력해주세요."}
+    )
+    phone = serializers.CharField(
+        required=True,
+        error_messages={"required": "전화번호를 입력해주세요."}
+    )
+    user_type = serializers.ChoiceField(
+        required=True,
+        choices=User.USER_TYPE_CHOICES,
+        error_messages={"required": "회원 구분을 선택해주세요."}
+    )
 
     # 비밀번호 변경
     current_password = serializers.CharField(
@@ -62,7 +72,10 @@ class UserUpdateSerializer(serializers.ModelSerializer):
     )
     password = serializers.CharField(
         write_only=True, required=False, min_length=8, style={'input_type': 'password'},
-        error_messages={"message": "비밀번호는 최소 8자 이상이어야 합니다."}
+        # error_messages={"message": "비밀번호는 최소 8자 이상이어야 합니다."}
+        error_messages={
+            "min_length": "비밀번호는 최소 8자 이상이어야 합니다.",
+            "required": "비밀번호를 입력해주세요."}
     )
 
     class Meta:
