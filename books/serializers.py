@@ -13,7 +13,7 @@ class BookSerializer(serializers.ModelSerializer):
             'publisher',
             'callnumber',
             'location',
-            'image',
+            'image_url',
             # 'liked_count', # 좋아요 개수
             'is_liked', # 좋아요 여부
             'book_status'
@@ -31,7 +31,7 @@ class BookSerializer(serializers.ModelSerializer):
 # 상세 조회
 class BookDetailSerializer(serializers.ModelSerializer):
     title = serializers.CharField(read_only=True) # 제목
-    image = serializers.ImageField(read_only=True) # 이미지
+    image = serializers.URLField(read_only=True) # 이미지
     author = serializers.CharField(read_only=True) # 저자
     edition = serializers.CharField(read_only=True) # 판사항
     callnumber = serializers.CharField(read_only=True) # 청구기호
@@ -44,7 +44,7 @@ class BookDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
         fields = [
-            'title', 'image', 'author', 'edition',
+            'title', 'image_url', 'author', 'edition',
             'publication', 'physical',
             'callnumber', 'marc',
         ]
