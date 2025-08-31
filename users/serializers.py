@@ -3,6 +3,8 @@ from .models import User
 import re
 from django.contrib.auth import get_user_model
 
+User = get_user_model()
+
 class UserSignupSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
         validators=[],  # 기본 UniqueValidator 제거
@@ -120,3 +122,15 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+
+# 아이디 찾기
+class FindUsernameSerializer(serializers.Serializer):
+    name = serializers.CharField(error_messages={"required": "이름을 입력해주세요."})
+    phone = serializers.CharField(error_messages={"required": "전화번호를 입력해주세요."})
+
+    def validate_phone(self, value):
+        digits = re.sub(r'[^0-9]', '', value or '')
+        if not (len(digits) == 11 and digits.startswith('010')):
+            raise serializers.ValidationError({"message": "전화번호 형식이 올바르지 않습니다. 예) 010-1234-5678"})
+        self._normalized_phone = digits
+        return digits
