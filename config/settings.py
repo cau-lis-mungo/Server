@@ -166,6 +166,7 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [ 
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://mungo.p-e.kr",
 ]
 
 # Internationalization
@@ -196,6 +197,12 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+        "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.ScopedRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "find_username": "5/min", # 1분당 5회 허용
+    },
 }
 # REST_FRAMEWORK = {
 #     # 인증 방식
@@ -230,9 +237,6 @@ SIMPLE_JWT = {
     'TOKEN_USER_CLASS': 'users.User',
 }
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
-
 # RENTALS
 RENTAL_DAYS = 14
 RENTAL_LIMIT_PER_USER = 5
@@ -241,18 +245,19 @@ RENTAL_LIMIT_PER_USER = 5
 RESERVATION_LIMIT_PER_USER = 3
 RESERVATION_DAYS = 7
 
-# DRF Throttle
-REST_FRAMEWORK = {
-    "DEFAULT_THROTTLE_CLASSES": [
-        "rest_framework.throttling.ScopedRateThrottle",
-    ],
-    "DEFAULT_THROTTLE_RATES": {
-        "find_username": "5/min", # 1분당 5회 허용
-    },
-}
-
-
 # S3
-DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+# MEDIA_URL = '/media/'
+# MEDIA_ROOT = BASE_DIR / 'media'
+
 AWS_STORAGE_BUCKET_NAME = "cau-lis-mungo"
 AWS_S3_REGION_NAME = "ap-northeast-2"
+
+AWS_S3_FILE_OVERWRITE = False
+AWS_DEFAULT_ACL = None
+AWS_QUERYSTRING_AUTH = False
+
+DEFAULT_FILE_STORAGE = "config.storages.MediaRootS3Boto3Storage"
+MEDIA_URL = f"https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/"
+AWS_S3_OBJECT_PARAMETERS = {
+    'CacheControl': 'max-age=86400',
+}

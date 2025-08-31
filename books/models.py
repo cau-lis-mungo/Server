@@ -21,7 +21,8 @@ class Book(models.Model):
     edition = models.CharField(max_length=100, null=True, blank=True) # 판사항
     desc = models.TextField(null=True, blank=True) # 총서사항
     book_status = models.CharField(max_length=20, choices=BOOK_STATUS_CHOICES, default='AVAILABLE')  # 도서 상태
-    image = models.ImageField(upload_to='book_images/', null=True, blank=True)  # 표지 이미지
+    # image = models.ImageField(upload_to='book_images/', null=True, blank=True)  # 표지 이미지
+    image_url = models.URLField(null=True, blank=True)
 
     liked_users = models.ManyToManyField( # 좋아요
         settings.AUTH_USER_MODEL,
