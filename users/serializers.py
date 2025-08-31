@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import User
 import re
+from django.contrib.auth import get_user_model
 
 class UserSignupSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
@@ -40,7 +41,7 @@ class UserSignupSerializer(serializers.ModelSerializer):
         digits = re.sub(r'[^0-9]', '', value)
         if not (len(digits) == 11 and digits.startswith('010')):
             raise serializers.ValidationError({"message": "전화번호 형식이 올바르지 않습니다. 예) 010-1234-5678"})
-        return value
+        return digits #value
 
     def create(self, validated_data):
         password = validated_data.pop('password')
@@ -105,7 +106,7 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             digits = re.sub(r'[^0-9]', '', value)
             if not (len(digits) == 11 and digits.startswith('010')):
                 raise serializers.ValidationError({"message": "전화번호 형식이 올바르지 않습니다. 예) 010-1234-5678"})
-        return value
+        return digits #value
 
     def update(self, instance, validated_data):
         new_pw = validated_data.pop('password', None)
