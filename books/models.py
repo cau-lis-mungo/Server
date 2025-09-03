@@ -52,7 +52,7 @@ class Marc(models.Model):
     field_260        = models.TextField("260", null=True, blank=True)
     field_300        = models.TextField("300", null=True, blank=True)
     field_310        = models.CharField("310", max_length=200, null=True, blank=True)
-    field_342        = models.TextField("342", null=True, blank=True)
+    field_362        = models.TextField("362", null=True, blank=True)
 
     field_490        = models.TextField("490", null=True, blank=True)
 
@@ -79,7 +79,7 @@ class Marc(models.Model):
     field_856        = models.TextField("856", null=True, blank=True)
 
     def __str__(self):
-        return f"{self.book.title}"
+        return f"{self.book.title} ({self.book.book_code})"
     
     def build_json(self):
         j = {}
@@ -104,7 +104,7 @@ class Marc(models.Model):
             "260": self.field_260,
             "300": self.field_300,
             "310": self.field_310,
-            "342": self.field_342,
+            "362": self.field_362,
             "490": self.field_490,
             "500": self.field_500,
             "502": self.field_502,
@@ -142,10 +142,10 @@ class Marc(models.Model):
         super().save(*args, **kwargs)
 
 class TargetName(models.Model):
-    name = models.CharField("이용자 대상 주기 전거표", max_length=200, unique=True)
+    name = models.CharField("이용자대상주기", max_length=200, unique=True)
 
     class Meta:
-        verbose_name = "521 전거"
+        verbose_name = "TargetName"
 
     def __str__(self):
         return self.name
@@ -158,7 +158,7 @@ class Target(models.Model):
 
     class Meta:
         verbose_name = "Target"
-        verbose_name_plural = "Target"
+        # verbose_name_plural = "Target"
         # 같은 책에 같은 전거 중복 금지
         constraints = [
             models.UniqueConstraint(fields=["book", "target"], name="uq_target_book_authority")
@@ -178,7 +178,7 @@ class Curation(models.Model):
 
     class Meta:
         verbose_name = "Curation"
-        verbose_name_plural = "Curation"
+        # verbose_name_plural = "Curation"
 
     def __str__(self):
         return f"Curation[{self.book.title}]"
