@@ -33,7 +33,7 @@ class BookSerializer(serializers.ModelSerializer):
 # 상세 조회
 class BookDetailSerializer(serializers.ModelSerializer):
     title = serializers.CharField(read_only=True) # 제목
-    image = serializers.URLField(read_only=True) # 이미지
+    image_url = serializers.URLField(read_only=True) # 이미지
     author = serializers.CharField(read_only=True) # 저자
     edition = serializers.CharField(read_only=True) # 판사항
     callnumber = serializers.CharField(read_only=True) # 청구기호
