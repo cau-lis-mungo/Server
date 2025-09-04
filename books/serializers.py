@@ -8,6 +8,8 @@ class BookSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
         fields = [
+            'id',
+            'book_code',
             'title',
             'author',
             'publisher',
@@ -44,6 +46,7 @@ class BookDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
         fields = [
+            'id', 'book_code',
             'title', 'image_url', 'author', 'edition',
             'publication', 'physical',
             'callnumber', 'marc',
