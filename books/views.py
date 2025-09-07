@@ -9,6 +9,8 @@ from .models import Book
 from reservations.models import Reservation
 from .serializers import BookSerializer, BookDetailSerializer
 from reservations.serializers import ReservationSerializer
+from .filters import MinLengthSearchFilter
+
 
 # Create your views here.
 # 좋아요
@@ -35,8 +37,9 @@ class BookViewSet(viewsets.ModelViewSet):
     # serializer_class = BookSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
-    filter_backends = [filters.SearchFilter]
-    search_fields = ['title', 'author', 'isbn']
+    # filter_backends = [filters.SearchFilter]
+    filter_backends = [MinLengthSearchFilter]
+    search_fields = ['=isbn', '=book_code','title', 'author', '^publisher']
 
     def get_serializer_class(self):
         if self.action == 'retrieve':
