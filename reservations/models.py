@@ -1,27 +1,31 @@
 from django.conf import settings
-from rest_framework.exceptions import ValidationError
+# from rest_framework.exceptions import ValidationError
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models import Q, Exists, OuterRef
 from django.db.models.functions import Now, TruncDate
 from django.utils import timezone
-from books.models import Book
+from books.models import Book, BookStatus
 
 def _limit() -> int:
-    from django.conf import settings
     return getattr(settings, "RESERVATION_LIMIT_PER_USER", 3)
 
 def _reservation_days() -> int:
-    from django.conf import settings
     return getattr(settings, "RESERVATION_DAYS", 7)
+
+class ReservationStatus(models.TextChoices):
+    ACTIVE = "ACTIVE", "예약중"
+    CANCELED = "CANCELED", "예약취소"
+    EXPIRED = "EXPIRED", "예약만료"
 
 class ReservationQuerySet(models.QuerySet):
     # 유효한 예약
     def active(self):
-        return self.filter(status="ACTIVE")
-    
+        return self.filter(status=ReservationStatus.ACTIVE)
+        
     # 반납된 도서에 대한 유효한 예약
     def not_expired(self):
-        return self.filter(due_date__gte=TruncDate(Now()))
+        return self.active().filter(due_date__gte=TruncDate(Now()))
     
     # 사용자별 예약
     def for_user(self, user):
@@ -29,36 +33,36 @@ class ReservationQuerySet(models.QuerySet):
     
     # 만료된 예약
     def expired(self):
-        return self.filter(status="EXPIRED")
+        return self.filter(status=ReservationStatus.EXPIRED)
     
     # 반납된 도서에 대한 기간이 초과된 예약 (만료 처리 예정)
     def overdue_active(self):
         # 만료일을 지나면 자동 만료 대상으로
-        return self.filter(status="ACTIVE", due_date__lt=TruncDate(Now()))
+        return self.active().filter(due_date__lt=TruncDate(Now()))
     
     # 만료 처리
     def expire_overdue(self):
-        return self.overdue_active().update(status="예약만료")
+        return self.overdue_active().update(status=ReservationStatus.EXPIRED)
     
     def expire_overdue_and_release_books(self):
         updated = self.expire_overdue()
 
         has_active = self.active().filter(book=OuterRef("pk"))
-        qs = Book.objects.filter(book_status="예약중").annotate(has_active=Exists(has_active)).filter(has_active=False)
+        qs = Book.objects.filter(book_status=BookStatus.RESERVED).annotate(has_active=Exists(has_active)).filter(has_active=False)
         fixed = 0
         for b in qs:
-            if b.book_status != "대출가능":
-                b.book_status = "대출가능"
+            if b.book_status != BookStatus.AVAILABLE:
+                b.book_status = BookStatus.AVAILABL
                 b.save(update_fields=["book_status"])
             fixed += 1
         return updated, fixed
 
 class Reservation(models.Model):
-    STATUS_CHOICES = (
-        ('ACTIVE', '예약중'),
-        ('CANCELED', '예약취소'),
-        ('EXPIRED', '예약만료'),
-    )
+    # STATUS_CHOICES = (
+    #     ('ACTIVE', '예약중'),
+    #     ('CANCELED', '예약취소'),
+    #     ('EXPIRED', '예약만료'),
+    # )
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     book = models.ForeignKey(Book, on_delete=models.CASCADE)
@@ -69,8 +73,8 @@ class Reservation(models.Model):
 
     status = models.CharField(
         max_length=10,
-        choices=STATUS_CHOICES,
-        default='ACTIVE',
+        choices=ReservationStatus.choices,
+        default=ReservationStatus.ACTIVE,
     )
 
     objects = ReservationQuerySet.as_manager()
@@ -80,7 +84,7 @@ class Reservation(models.Model):
         constraints = [
             models.UniqueConstraint(
                 fields=["user", "book"],
-                condition=Q(status="ACTIVE"),
+                condition=Q(status=ReservationStatus.ACTIVE),
                 name="uq_active_reservation_per_user_book",
             )
         ]
@@ -97,7 +101,7 @@ class Reservation(models.Model):
         # if Reservation.objects.filter(user=self.user, book=self.book, status="ACTIVE").exclude(pk=self.pk).exists():
         #     raise ValidationError({"message": "이미 이 도서를 예약하셨습니다."})
 
-        allowed_statuses = {"대출중", "예약중"}
+        allowed_statuses = {BookStatus.RENTED, BookStatus.RESERVED}
         book_status = getattr(self.book, "book_status", None)
 
         if book_status not in allowed_statuses:
@@ -112,11 +116,11 @@ class Reservation(models.Model):
     
     # 취소
     def cancel(self):
-        if self.status != 'ACTIVE':
+        if self.status != ReservationStatus.ACTIVE:
             raise ValidationError({'message': ['이미 취소되었거나 만료된 예약입니다.']})
-        self.status = 'CANCELED'
+        self.status = ReservationStatus.CANCELED
         self.cancel_date = timezone.now()
-        self.save()
+        self.save(update_fields=["status", "cancel_date"])
     
     # 만료
     # def mark_expired(self):

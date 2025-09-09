@@ -18,7 +18,7 @@ class ReservationCreateSerializer(serializers.ModelSerializer):
         user = self.context["request"].user
         book = attrs["book"]
 
-        if Reservation.objects.filter(user=user, book=book, status="ACTIVE").exists():
+        if Reservation.objects.active().filter(user=user, book=book).exists():
             raise serializers.ValidationError({"message": "이미 예약하셨습니다."})
         return attrs
 
@@ -34,7 +34,7 @@ class ReservationCreateSerializer(serializers.ModelSerializer):
         user = self.context["request"].user
         instance = Reservation(user=user, **validated_data)
         try:
-            instance.full_clean()   # clean() + 필드 유효성
+            instance.full_clean()
         except DjangoValidationError as e:
             # DRF가 이해하는 ValidationError로 변환 (400 반환)
             detail = getattr(e, "message_dict", None) or {"message": e.messages}
@@ -44,9 +44,9 @@ class ReservationCreateSerializer(serializers.ModelSerializer):
 
 # 예약 조회
 class ReservationSerializer(serializers.ModelSerializer):
-    # book = BookBriefSerializer(read_only=True)
+    book = BookBriefSerializer(read_only=True)
 
     class Meta:
         model = Reservation
         fields = "__all__"
-        read_only_fields = ("book", "user", "reservation_date", "due_date", "cancel_date", "status")
+        read_only_fields = ("id", "book", "reservation_date", "due_date", "cancel_date", "status")

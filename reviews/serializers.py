@@ -24,7 +24,7 @@ class BookSerializer(serializers.ModelSerializer):
 class ReviewCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
-        fields = ['book', 'content'] # rating
+        fields = ["id", 'book', 'content'] # rating
     
     # def validate_rating(self, value):
     #     if not (1 <= value <= 5):
@@ -44,7 +44,7 @@ class ReviewCreateSerializer(serializers.ModelSerializer):
 class ReviewUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Review
-        fields = ['content'] # rating
+        fields = ["id", 'content'] # rating
     
     # def validate_rating(self, value):
     #     if not (1 <= value <= 5):
