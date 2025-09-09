@@ -1,3 +1,8 @@
+# 유효성 통과 확인
+## python run_with_tunnel.py import_books --file ./book.csv --dry-run
+# 실제 반영
+## python run_with_tunnel.py import_books --file ./book.csv
+
 from django.db import models
 from django.core.serializers.json import DjangoJSONEncoder
 from django.conf import settings
@@ -16,8 +21,8 @@ class Book(models.Model):
     author = models.CharField(max_length=200, null=True, blank=True) # 저자사항
     publisher = models.CharField(max_length=200, blank=True, null=True) # 출판사
     isbn = models.CharField(max_length=20, null=True, blank=True) # ISBN
-    callnumber = models.CharField(max_length=50, null=True, blank=True) # 청구기호
-    location = models.CharField(max_length=200, blank=True, null=True) # 위치
+    callnumber = models.CharField(max_length=200, null=True, blank=True) # 청구기호
+    location = models.CharField(max_length=20, blank=True, null=True) # 위치
     edition = models.CharField(max_length=100, null=True, blank=True) # 판사항
     desc = models.TextField(null=True, blank=True) # 총서사항
     book_status = models.CharField(max_length=20, choices=BOOK_STATUS_CHOICES, default='AVAILABLE')  # 도서 상태
@@ -38,20 +43,21 @@ class Marc(models.Model):
     data = models.JSONField("MARC JSON", default=dict, blank=True, encoder=DjangoJSONEncoder)
 
 
-    field_020        = models.CharField("020", max_length=32, null=True, blank=True)
-    field_020_set    = models.CharField("020(세트)", max_length=32, null=True, blank=True)
-    field_022        = models.CharField("022", max_length=32, null=True, blank=True)
-    field_052        = models.CharField("052", max_length=32, null=True, blank=True)
-    field_090        = models.CharField("090", max_length=64, null=True, blank=True)
+    field_020        = models.TextField("020", null=True, blank=True)
+    field_020_set    = models.TextField("020(세트)", null=True, blank=True)
+    field_022        = models.TextField("022", null=True, blank=True)
+    field_052        = models.TextField("052", null=True, blank=True)
+    field_056        = models.TextField("056", null=True, blank=True)
+    field_090        = models.TextField("090", null=True, blank=True)
 
     field_245        = models.TextField("245", null=True, blank=True)
     field_246_same   = models.TextField("246(대등표제)", null=True, blank=True)
     field_246_origin = models.TextField("246(원표제)", null=True, blank=True)
-    field_250        = models.CharField("250", max_length=200, null=True, blank=True)
+    field_250        = models.TextField("250", null=True, blank=True)
 
     field_260        = models.TextField("260", null=True, blank=True)
     field_300        = models.TextField("300", null=True, blank=True)
-    field_310        = models.CharField("310", max_length=200, null=True, blank=True)
+    field_310        = models.TextField("310", null=True, blank=True)
     field_362        = models.TextField("362", null=True, blank=True)
 
     field_490        = models.TextField("490", null=True, blank=True)
@@ -98,6 +104,7 @@ class Marc(models.Model):
         simple_map = {
             "022": self.field_022,
             "052": self.field_052,
+            "056": self.field_056,
             "090": self.field_090,
             "245": self.field_245,
             "250": self.field_250,
@@ -142,7 +149,7 @@ class Marc(models.Model):
         super().save(*args, **kwargs)
 
 class TargetName(models.Model):
-    name = models.CharField("이용자대상주기", max_length=200, unique=True)
+    name = models.CharField("이용자대상주기",  max_length=200, unique=True)
 
     class Meta:
         verbose_name = "TargetName"
