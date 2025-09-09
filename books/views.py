@@ -24,7 +24,7 @@ class BookLikedView(APIView):
             return Response({"detail": "책을 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
         user = request.user
-        if user in book.liked_users.filter(pk=user.pk).exists():
+        if book.liked_users.filter(pk=user.pk).exists():
             book.liked_users.remove(user)
             return Response({"message": "좋아요 취소됨"}, status=status.HTTP_200_OK)
         else:

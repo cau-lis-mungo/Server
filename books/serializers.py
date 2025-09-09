@@ -5,7 +5,7 @@ import re
 class BookSerializer(serializers.ModelSerializer):
     # like_count = serializers.SerializerMethodField()
     is_liked = serializers.SerializerMethodField()
-    book_status = serializers.CharField(source='get_book_status_display', read_only=True)
+    # book_status = serializers.CharField(source='get_book_status_display', read_only=True)
 
     
     class Meta:

@@ -45,9 +45,8 @@ class ReservationCreateSerializer(serializers.ModelSerializer):
 # 예약 조회
 class ReservationSerializer(serializers.ModelSerializer):
     book = BookBriefSerializer(read_only=True)
-    status_display = serializers.CharField(source="get_status_display", read_only=True)
 
     class Meta:
         model = Reservation
         fields = "__all__"
-        read_only_fields = ("id", "book", "user", "reservation_date", "due_date", "cancel_date", "status")
+        read_only_fields = ("id", "book", "reservation_date", "due_date", "cancel_date", "status")
