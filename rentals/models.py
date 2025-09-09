@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
-from datetime import date
+# from datetime import date
+from django.utils import timezone
 from books.models import Book
 
 # Create your models here.
@@ -31,12 +32,12 @@ class Rental(models.Model):
 
     @property
     def is_overdue(self): # 연체여부
-        return not self.is_returned and self.due_date < date.today()
+        return not self.is_returned and self.due_date < timezone.localdate()
 
     @property
     def overdue_days(self): # 연체일
         if self.is_overdue:
-            return (date.today() - self.due_date).days
+            return (timezone.localdate() - self.due_date).days
         return 0
 
     def __str__(self):

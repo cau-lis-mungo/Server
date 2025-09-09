@@ -5,7 +5,7 @@ from django.db import transaction
 from rest_framework import serializers
 from .models import Rental
 from reservations.models import Reservation
-from books.models import Book
+from books.models import Book, BookStatus
 
 # 대출가능일
 def _rental_days() -> int:
@@ -17,7 +17,7 @@ def _rental_limit() -> int:
 class BookBriefSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
-        fields = ("id", "book_code", "image")
+        fields = ("id", "book_code", "image_url", "book_status",)
 
 class RentalListSerializer(serializers.ModelSerializer):
     book = BookBriefSerializer(read_only=True)
@@ -34,8 +34,8 @@ class RentalSerializer(serializers.ModelSerializer):
         model = Rental
         fields = "__all__"
         read_only_fields = (
-            "user", "rental_date", "return_date", "is_returned", "due_date",
-            "is_overdue", "overdue_days", "book_status",
+            "id", "user", "rental_date", "return_date", "is_returned", "due_date",
+            "is_overdue", "overdue_days",
         )
 
     def get_is_overdue(self, obj): return obj.is_overdue
@@ -69,7 +69,7 @@ class RentalCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"message" : "이미 대출 중인 도서입니다."})
         
         # 책 상태 확인
-        if getattr(book, "book_status", "대출가능") != "대출가능":
+        if getattr(book, "book_status",  BookStatus.AVAILABLE) != BookStatus.AVAILABLE:
             raise serializers.ValidationError({"message" : "이 도서는 현재 대출할 수 없습니다."})
         
         self.context["book"] = book
@@ -83,8 +83,8 @@ class RentalCreateSerializer(serializers.ModelSerializer):
         rental = Rental.objects.create(user=user, book=book, due_date=due_date, return_date = None, is_returned = False)
 
         # 책 상태 변경
-        if hasattr(book, "book_status"):
-            book.book_status = "대출중"
+        if hasattr(book, "book_status") and book.book_status != BookStatus.RENTED:
+            book.book_status = BookStatus.RENTED
             book.save(update_fields=["book_status"])
         return rental
 
@@ -135,13 +135,13 @@ class RentalUpdateSerializer(serializers.ModelSerializer):
             target.save(update_fields=["due_date"])
 
             # 예약자 있으면
-            if hasattr(book, "book_status") and book.book_status != "예약중":
-                book.book_status = "예약중"
+            if hasattr(book, "book_status") and book.book_status != BookStatus.RESERVED:
+                book.book_status = BookStatus.RESERVED
                 book.save(update_fields=["book_status"])
         else:
             # 예약자 없으면
-            if hasattr(book, "book_status") and book.book_status != "대출가능":
-                book.book_status = "대출가능"
+            if hasattr(book, "book_status") and book.book_status != BookStatus.AVAILABLE:
+                book.book_status = BookStatus.AVAILABLE
                 book.save(update_fields=["book_status"])
 
-            return instance
+        return instance

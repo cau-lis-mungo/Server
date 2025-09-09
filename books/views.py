@@ -24,7 +24,7 @@ class BookLikedView(APIView):
             return Response({"detail": "책을 찾을 수 없습니다."}, status=status.HTTP_404_NOT_FOUND)
 
         user = request.user
-        if user in book.liked_users.all():
+        if user in book.liked_users.filter(pk=user.pk).exists():
             book.liked_users.remove(user)
             return Response({"message": "좋아요 취소됨"}, status=status.HTTP_200_OK)
         else:
@@ -51,7 +51,7 @@ class BookViewSet(viewsets.ModelViewSet):
         book = self.get_object()
         user = request.user
 
-        if Reservation.objects.filter(user=user, book=book, status="ACTIVE").exists():
+        if Reservation.objects.active().filter(user=user, book=book).exists():
             raise serializers.ValidationError({"message": "이미 예약하셨습니다."})
 
         instance = Reservation(user=user, book=book)
