@@ -5,6 +5,8 @@ import re
 class BookSerializer(serializers.ModelSerializer):
     # like_count = serializers.SerializerMethodField()
     is_liked = serializers.SerializerMethodField()
+    book_status = serializers.CharField(source='get_book_status_display', read_only=True)
+
     
     class Meta:
         model = Book
@@ -28,7 +30,8 @@ class BookSerializer(serializers.ModelSerializer):
     def get_is_liked(self, obj):
         request = self.context.get('request')
         if request and request.user.is_authenticated:
-            return request.user in obj.liked_users.all()
+            # return request.user in obj.liked_users.all()
+            return obj.liked_users.filter(pk=request.user.pk).exists()
         return False
 
 # 상세 조회

@@ -8,13 +8,19 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.conf import settings
 
 # Create your models here.
+class BookStatus(models.TextChoices):
+    AVAILABLE = "AVAILABLE", "대출가능"
+    RENTED = "RENTED", "대출중"
+    RESERVED = "RESERVED", "예약중"
+    UNAVAILABLE = "UNAVAILABLE", "대출불가"
+
 class Book(models.Model):
-    BOOK_STATUS_CHOICES = [
-        ('AVAILABLE', '대출가능'),
-        ('RENTED', '대출중'),
-        ('RESERVED', '예약중'),
-        ('UNAVAILABLE', '대출불가'),
-    ]
+    # BOOK_STATUS_CHOICES = [
+    #     ('AVAILABLE', '대출가능'),
+    #     ('RENTED', '대출중'),
+    #     ('RESERVED', '예약중'),
+    #     ('UNAVAILABLE', '대출불가'),
+    # ]
 
     book_code = models.CharField(max_length=30, unique=True) # 장서등록번호
     title = models.CharField(max_length=200, null=True, blank=True) # 표제
@@ -25,7 +31,7 @@ class Book(models.Model):
     location = models.CharField(max_length=20, blank=True, null=True) # 위치
     edition = models.CharField(max_length=100, null=True, blank=True) # 판사항
     desc = models.TextField(null=True, blank=True) # 총서사항
-    book_status = models.CharField(max_length=20, choices=BOOK_STATUS_CHOICES, default='AVAILABLE')  # 도서 상태
+    book_status = models.CharField(max_length=20, choices=BookStatus.choices, default=BookStatus.AVAILABLE)  # 도서 상태
     # image = models.ImageField(upload_to='book_images/', null=True, blank=True)  # 표지 이미지
     image_url = models.URLField(null=True, blank=True)
 
@@ -149,7 +155,7 @@ class Marc(models.Model):
         super().save(*args, **kwargs)
 
 class TargetName(models.Model):
-    name = models.CharField("이용자대상주기",  max_length=200, unique=True)
+    name = models.CharField("이용자대상",  max_length=200, unique=True)
 
     class Meta:
         verbose_name = "TargetName"

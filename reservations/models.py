@@ -5,7 +5,7 @@ from django.db import models
 from django.db.models import Q, Exists, OuterRef
 from django.db.models.functions import Now, TruncDate
 from django.utils import timezone
-from books.models import Book
+from books.models import Book, BookStatus
 
 def _limit() -> int:
     return getattr(settings, "RESERVATION_LIMIT_PER_USER", 3)
@@ -48,11 +48,11 @@ class ReservationQuerySet(models.QuerySet):
         updated = self.expire_overdue()
 
         has_active = self.active().filter(book=OuterRef("pk"))
-        qs = Book.objects.filter(book_status="예약중").annotate(has_active=Exists(has_active)).filter(has_active=False)
+        qs = Book.objects.filter(book_status=BookStatus.RESERVED).annotate(has_active=Exists(has_active)).filter(has_active=False)
         fixed = 0
         for b in qs:
-            if b.book_status != "대출가능":
-                b.book_status = "대출가능"
+            if b.book_status != BookStatus.AVAILABLE:
+                b.book_status = BookStatus.AVAILABL
                 b.save(update_fields=["book_status"])
             fixed += 1
         return updated, fixed
@@ -101,7 +101,7 @@ class Reservation(models.Model):
         # if Reservation.objects.filter(user=self.user, book=self.book, status="ACTIVE").exclude(pk=self.pk).exists():
         #     raise ValidationError({"message": "이미 이 도서를 예약하셨습니다."})
 
-        allowed_statuses = {"대출중", "예약중"}
+        allowed_statuses = {BookStatus.RENTED, BookStatus.RESERVED}
         book_status = getattr(self.book, "book_status", None)
 
         if book_status not in allowed_statuses:
