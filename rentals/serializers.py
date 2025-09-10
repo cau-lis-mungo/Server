@@ -145,3 +145,29 @@ class RentalUpdateSerializer(serializers.ModelSerializer):
                 book.save(update_fields=["book_status"])
 
         return instance
+
+# 대출 조회
+class RentalStatusListSerializer(serializers.ModelSerializer):
+    book = BookBriefSerializer(read_only=True)
+    is_overdue = serializers.SerializerMethodField()
+    overdue_days = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Rental
+        fields = (
+            "id",
+            "book",
+            "rental_date",
+            "due_date",
+            "return_date",
+            "is_returned",
+            "is_overdue",
+            "overdue_days",
+        )
+        read_only_fields = fields
+
+    def get_is_overdue(self, obj):
+        return obj.is_overdue
+
+    def get_overdue_days(self, obj):
+        return obj.overdue_days

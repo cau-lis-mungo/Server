@@ -39,7 +39,7 @@ class BookViewSet(viewsets.ModelViewSet):
 
     # filter_backends = [filters.SearchFilter]
     filter_backends = [MinLengthSearchFilter]
-    search_fields = ['=isbn', '=book_code','title', 'author', '^publisher']
+    search_fields = ['=isbn', '=issn', '=book_code','title', 'author', '^publisher']
 
     def get_serializer_class(self):
         if self.action == 'retrieve':

@@ -2,9 +2,10 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from django.db import transaction
+from django.utils import timezone
 from .models import Rental
 from .serializers import (
-    RentalSerializer, RentalCreateSerializer, RentalUpdateSerializer, RentalListSerializer,
+    RentalSerializer, RentalCreateSerializer, RentalUpdateSerializer, RentalListSerializer, RentalStatusListSerializer
 )
 
 class IsAdminOrOwner(permissions.BasePermission):
@@ -29,6 +30,10 @@ class RentalViewSet(viewsets.ModelViewSet):
 
         # if self.request.query_params.get("all") == "true":
         #     return super().get_queryset()
+
+        overdue_param = (self.request.query_params.get("overdue") or "").lower()
+        if overdue_param in ("1", "true", "t", "yes", "y"):
+            qs = qs.filter(is_returned=False, due_date__lt=today)
 
         return qs
 
@@ -72,10 +77,30 @@ class RentalViewSet(viewsets.ModelViewSet):
     def current(self, request):
         qs = self.get_queryset().filter(is_returned=False).select_related("book")
         page = self.paginate_queryset(qs)
-        ser_class = RentalListSerializer  # 목록 전용
+        # ser_class = RentalListSerializer  # 목록 전용
+        ser_class = RentalStatusListSerializer
         if page is not None:
             serializer = ser_class(page, many=True, context=self.get_serializer_context())
             return self.get_paginated_response(serializer.data)
+        serializer = ser_class(qs, many=True, context=self.get_serializer_context())
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    @action(detail=False, methods=["GET"], url_path="overdue")
+    def overdue(self, request):
+        today = timezone.localdate()
+        base_qs = super().get_queryset().select_related("book", "user")
+
+        if request.user.is_staff:
+            qs = base_qs.filter(is_returned=False, due_date__lt=today)
+        else:
+            qs = base_qs.filter(user=request.user, is_returned=False, due_date__lt=today)
+
+        page = self.paginate_queryset(qs)
+        ser_class = RentalStatusListSerializer
+        if page is not None:
+            serializer = ser_class(page, many=True, context=self.get_serializer_context())
+            return self.get_paginated_response(serializer.data)
+
         serializer = ser_class(qs, many=True, context=self.get_serializer_context())
         return Response(serializer.data, status=status.HTTP_200_OK)
     

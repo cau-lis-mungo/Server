@@ -27,6 +27,7 @@ class Book(models.Model):
     author = models.CharField(max_length=200, null=True, blank=True) # 저자사항
     publisher = models.CharField(max_length=200, blank=True, null=True) # 출판사
     isbn = models.CharField(max_length=20, null=True, blank=True) # ISBN
+    issn = models.CharField(max_length=20, null=True, blank=True) # ISSN
     callnumber = models.CharField(max_length=200, null=True, blank=True) # 청구기호
     location = models.CharField(max_length=20, blank=True, null=True) # 위치
     edition = models.CharField(max_length=100, null=True, blank=True) # 판사항

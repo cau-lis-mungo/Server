@@ -1,3 +1,8 @@
+# 테스트
+# python run_with_tunnel.py import_books --file book.csv --dry-run
+# 실행
+# python run_with_tunnel.py import_books --file book.csv
+
 import csv
 import re
 from typing import Dict, List, Tuple
@@ -57,8 +62,19 @@ def _first_subfield(raw: str, code: str) -> str | None:
 def _clean_isbn(isbn: str | None) -> str | None:
     if not isbn:
         return None
+    isbn = re.split(r"[\s\(\)]", isbn)[0]
     cleaned = re.sub(r"[^0-9Xx]", "", isbn)
     return cleaned or None
+
+
+def _clean_issn(issn: str | None) -> str | None:
+    if not issn:
+        return None
+    m = re.search(r'(\d{4})[- ]?(\d{3}[\dXx])', issn)
+    if not m:
+        return None
+    return f"{m.group(1)}-{m.group(2).upper()}"
+
 
 class Command(BaseCommand):
     help = "Import/Upsert Books+Marc(+Target/Curation) from a CSV exported from Google Sheets."
@@ -108,12 +124,30 @@ class Command(BaseCommand):
                             raise CommandError(f"[line {idx}] '등록번호' is required.")
 
                         f020 = val(row, "020") # ISBN
+                        f020_set  = val(row, "020(세트)") # ISBN(세트)
+                        f022 = val(row, "022") # ISSN
                         f245 = val(row, "245") # 저자
                         f260 = val(row, "260") # 출판사
 
+                        # ISBN
                         isbn_raw = _first_subfield(f020, "a") # 020 $a
+                        if not isbn_raw and f020_set:
+                            isbn_raw = _first_subfield(f020_set, "a") or f020_set
                         isbn = _clean_isbn(isbn_raw)
+                        # ISSN
+                        issn_raw = _first_subfield(f022, "a") if f022 else None
+                        issn = None
+                        if issn_raw:
+                            issn = _clean_issn(issn_raw)
+                        elif f022:
+                            for piece in split_multi(f022):
+                                cand = _first_subfield(piece, "a") or piece
+                                issn = _clean_issn(cand)
+                                if issn:
+                                    break
+                        # 저자
                         author = _first_subfield(f245, "d") # 245 $d
+                        # 출판사
                         publisher = _first_subfield(f260, "b") # 260 $b
 
 
@@ -124,6 +158,7 @@ class Command(BaseCommand):
                             "author": author or None,
                             "publisher": publisher or None,
                             "isbn": isbn or None,
+                            "issn": issn or None,
                             "location": "문헌정보학과 과실",
                         }
 
@@ -139,8 +174,10 @@ class Command(BaseCommand):
 
                         marc_map = {
                             "field_020":        f020 or None,
-                            "field_020_set":    val(row, "020(세트)") or None,
-                            "field_022":        val(row, "022") or None,
+                            "field_020_set":    f020_set or None,
+                            "field_022":        f022 or None,
+                            # "field_020_set":    val(row, "020(세트)") or None,
+                            # "field_022":        val(row, "022") or None,
                             "field_052":        val(row, "052") or None,
                             "field_056":        val(row,"056") or None,
                             "field_090":        val(row, "090") or None,
