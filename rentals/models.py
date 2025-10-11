@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 # from datetime import date
 from django.utils import timezone
+from datetime import timedelta
 from books.models import Book
 
 # Create your models here.
@@ -42,3 +43,24 @@ class Rental(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.book.title} ({'반납' if self.is_returned else '대출중'})"
+
+#
+class BorrowPenalty(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="borrow_penalty")
+    penalty_until = models.DateField(null=True, blank=True)
+
+    class Meta:
+        db_table = "borrow_penalty"
+
+    @property
+    def in_penalty(self) -> bool:
+        return bool(self.penalty_until and self.penalty_until >= timezone.localdate())
+
+    def extend_by_days(self, days: int):
+        if days <= 0:
+            return
+        today = timezone.localdate()
+        candidate = today + timedelta(days=days)
+        if not self.penalty_until or candidate > self.penalty_until:
+            self.penalty_until = candidate
+            self.save(update_fields=["penalty_until"])

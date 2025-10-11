@@ -1,8 +1,12 @@
 from django.contrib import admin
-from .models import Rental
+from .models import Rental, BorrowPenalty
 
 # Register your models here.
 admin.site.register(Rental)
+admin.site.register(BorrowPenalty)
+
+class BorrowPenaltyAdmin(admin.ModelAdmin):
+    list_display = ("user", "penalty_until")
 
 # from django.utils.html import format_html
 # from django.urls import reverse

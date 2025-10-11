@@ -3,7 +3,7 @@ from django.conf import settings
 from django.utils import timezone
 from django.db import transaction
 from rest_framework import serializers
-from .models import Rental
+from .models import Rental, BorrowPenalty
 from reservations.models import Reservation
 from books.models import Book, BookStatus
 
@@ -38,8 +38,13 @@ class RentalSerializer(serializers.ModelSerializer):
             "is_overdue", "overdue_days",
         )
 
-    def get_is_overdue(self, obj): return obj.is_overdue
-    def get_overdue_days(self, obj): return obj.overdue_days
+    def get_is_overdue(self, obj):
+        base = obj.return_date or timezone.localdate()
+        return base > obj.due_date
+
+    def get_overdue_days(self, obj):
+        base = obj.return_date or timezone.localdate()
+        return max(0, (base - obj.due_date).days)
 
 # 대출 생성
 class RentalCreateSerializer(serializers.ModelSerializer):
@@ -52,12 +57,24 @@ class RentalCreateSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         user = self.context["request"].user
         code = attrs["code"].strip()
+        today = timezone.localdate()
 
         # 책 찾기
         try:
             book = Book.objects.get(book_code=code)
         except Book.DoesNotExist:
             raise serializers.ValidationError({"message": "해당 코드의 도서를 찾을 수 없습니다."})
+        
+        # 패널티 중이면 대출 불가
+        penalty = getattr(user, "borrow_penalty", None)
+        if penalty and penalty.in_penalty:
+            raise serializers.ValidationError({
+                "message": f"연체로 인해 {penalty.penalty_until}까지 대출이 불가합니다."
+            })
+
+        # 연체 중 도서 존재하면 불가
+        if Rental.objects.filter(user=user, is_returned=False, due_date__lt=today).exists():
+            raise serializers.ValidationError({"message": "연체 중인 도서가 있어 대출이 불가합니다."})
 
         # 대출 한도 초과 시 대출 불가
         active_count = Rental.objects.filter(user=user, is_returned=False).count()
@@ -115,6 +132,12 @@ class RentalUpdateSerializer(serializers.ModelSerializer):
         instance.return_date = timezone.localdate()
         instance.save(update_fields=["is_returned", "return_date"])
 
+        # 연체
+        if instance.return_date > instance.due_date:
+            overdue_days = (instance.return_date - instance.due_date).days
+            penalty, _ = BorrowPenalty.objects.get_or_create(user=instance.user)
+            penalty.extend_by_days(overdue_days)
+
         # 예약
         book = instance.book
         RES_DAYS = getattr(settings, "RESERVATION_DAYS", 3)
@@ -167,7 +190,9 @@ class RentalStatusListSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
     def get_is_overdue(self, obj):
-        return obj.is_overdue
+        base = obj.return_date or timezone.localdate()
+        return base > obj.due_date
 
     def get_overdue_days(self, obj):
-        return obj.overdue_days
+        base = obj.return_date or timezone.localdate()
+        return max(0, (base - obj.due_date).days)

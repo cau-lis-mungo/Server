@@ -25,12 +25,15 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self) -> QuerySet:
         qs = super().get_queryset()
+        user = self.request.user
         user_id = self.request.query_params.get("userId")
         book_id = self.request.query_params.get("bookId")
-        if user_id:
-            qs = qs.filter(user_id=user_id)
         if book_id:
             qs = qs.filter(book_id=book_id)
+        if user_id:
+            return qs.filter(user_id=user_id)
+        if user.is_authenticated:
+            qs = qs.filter(user_id=user.id)
         return qs
 
     def get_serializer_class(self):
