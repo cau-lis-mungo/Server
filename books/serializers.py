@@ -1,13 +1,14 @@
 from rest_framework import serializers
+from django.conf import settings
 from .models import Book
 import re
 
 class BookSerializer(serializers.ModelSerializer):
     # like_count = serializers.SerializerMethodField()
     is_liked = serializers.SerializerMethodField()
+    image_url = serializers.SerializerMethodField()
     # book_status = serializers.CharField(source='get_book_status_display', read_only=True)
 
-    
     class Meta:
         model = Book
         fields = [
@@ -24,6 +25,10 @@ class BookSerializer(serializers.ModelSerializer):
             'book_status'
         ]
 
+    def get_image_url(self, obj):
+        # 기본 이미지 반환
+        return obj.image_url or settings.DEFAULT_BOOK_IMAGE_URL
+    
     # def get_like_count(self, obj):
     #     return obj.liked_users.count()
     
@@ -39,7 +44,8 @@ class BookDetailSerializer(serializers.ModelSerializer):
     book_code = serializers.CharField(read_only=True) # 장서번호
     isbn = serializers.CharField(read_only=True) # isbn
     title = serializers.CharField(read_only=True) # 제목
-    image_url = serializers.URLField(read_only=True) # 이미지
+    # image_url = serializers.URLField(read_only=True) # 이미지
+    image_url = serializers.SerializerMethodField()
     author = serializers.CharField(read_only=True) # 저자
     publisher = serializers.CharField(read_only=True) # 출판사
     edition = serializers.CharField(read_only=True) # 판사항
@@ -60,6 +66,10 @@ class BookDetailSerializer(serializers.ModelSerializer):
             'publisher', 'physical',
             'callnumber', 'marc',
         ]
+    
+    def get_image_url(self, obj):
+        # 기본 이미지 반환
+        return obj.image_url or settings.DEFAULT_BOOK_IMAGE_URL
 
     # _re_pub_b = re.compile(r"\$b\s*([^$:;,]+)")
     # _re_phy_a = re.compile(r"\$a\s*([\d.,\s]+)\s*p", re.IGNORECASE)

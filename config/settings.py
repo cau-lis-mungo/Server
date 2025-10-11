@@ -261,3 +261,5 @@ MEDIA_URL = f"https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaw
 AWS_S3_OBJECT_PARAMETERS = {
     'CacheControl': 'max-age=86400',
 }
+
+DEFAULT_BOOK_IMAGE_URL = "https://cau-lis-mungo.s3.ap-northeast-2.amazonaws.com/books/default.png"
