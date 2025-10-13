@@ -52,7 +52,7 @@ class ReservationQuerySet(models.QuerySet):
         fixed = 0
         for b in qs:
             if b.book_status != BookStatus.AVAILABLE:
-                b.book_status = BookStatus.AVAILABL
+                b.book_status = BookStatus.AVAILABLE
                 b.save(update_fields=["book_status"])
             fixed += 1
         return updated, fixed
@@ -121,6 +121,35 @@ class Reservation(models.Model):
         self.status = ReservationStatus.CANCELED
         self.cancel_date = timezone.now()
         self.save(update_fields=["status", "cancel_date"])
+
+        book = self.book
+
+        # 대출 여부 확인
+        try:
+            from rentals.models import Rental
+            is_rented = Rental.objects.filter(book=book, returned_at__isnull=True).exists()
+        except Exception:
+            is_rented = False
+
+        # 남은 활성 예약 존재 여부
+        has_active_resv = Reservation.objects.active().filter(book=book).exists()
+
+        # 최종 상태 결정
+        new_status = (
+            BookStatus.RENTED if is_rented
+            else BookStatus.RESERVED if has_active_resv
+            else BookStatus.AVAILABLE
+        )
+
+        if book.book_status != new_status:
+            book.book_status = new_status
+            book.save(update_fields=["book_status"])
+    
+    # 다음 예약자에게 예약만기일 부여
+    def next_resv(self, days: int | None = None):
+        days = days or _reservation_days()
+        self.due_date = timezone.localdate() + timezone.timedelta(day=days)
+        self.save(update_fields=["due_date"])
     
     # 만료
     # def mark_expired(self):

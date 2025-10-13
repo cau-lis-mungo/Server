@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.response import Response
 from rest_framework import status, viewsets, filters, permissions, serializers
-from .models import Book
+from .models import Book, BookStatus
 from reservations.models import Reservation
 from .serializers import BookSerializer, BookDetailSerializer
 from reservations.serializers import ReservationSerializer
@@ -62,5 +62,16 @@ class BookViewSet(viewsets.ModelViewSet):
             return Response(detail, status=status.HTTP_400_BAD_REQUEST)
 
         instance.save()
+        # 예약 생성 후 상태 갱신
+        try:
+            from rentals.models import Rental
+            is_rented = Rental.objects.filter(book=book, returned_at__isnull=True).exists()
+        except Exception:
+            is_rented = False
+
+        if not is_rented and book.book_status != BookStatus.RESERVED:
+            book.book_status = BookStatus.RESERVED
+            book.save(update_fields=["book_status"])
+
         return Response(ReservationSerializer(instance, context={"request": request}).data,
                         status=status.HTTP_201_CREATED)
