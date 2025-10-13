@@ -126,7 +126,7 @@ class Command(BaseCommand):
                         f020 = val(row, "020") # ISBN
                         f020_set  = val(row, "020(세트)") # ISBN(세트)
                         f022 = val(row, "022") # ISSN
-                        f245 = val(row, "245") # 저자
+                        f245 = val(row, "245") # 서명/저자
                         f260 = val(row, "260") # 출판사
 
                         # ISBN
@@ -145,6 +145,8 @@ class Command(BaseCommand):
                                 issn = _clean_issn(cand)
                                 if issn:
                                     break
+                        # 서명
+                        title = val(row, "서명") or _first_subfield(f245, "a") or f245 # 245 $a
                         # 저자
                         author = _first_subfield(f245, "d") # 245 $d
                         # 출판사
@@ -152,7 +154,7 @@ class Command(BaseCommand):
 
 
                         book_defaults = {
-                            "title": val(row, "서명") or None,
+                            "title": title or None,
                             "image_url": val(row, "책표지이미지") or None,
                             "callnumber": val(row, "090(분류번호)") or None,
                             "author": author or None,
