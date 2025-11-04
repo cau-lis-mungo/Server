@@ -131,10 +131,10 @@ DATABASES = {
         # 'PASSWORD':
 		'PASSWORD': DB_PW,
 		# 'HOST': 'localhost',
-        # 'HOST': '127.0.0.1', # 로컬
-        'HOST': RDS_HOST,
-		'PORT': '3306',
-        # 'PORT': '3307', # 로컬
+        'HOST': '127.0.0.1', # 로컬
+        # 'HOST': RDS_HOST,
+		# 'PORT': '3306',
+        'PORT': '3307', # 로컬
         "OPTIONS": {
             "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
             "connect_timeout": 5,
@@ -250,7 +250,7 @@ RESERVATION_DAYS = 7
 # MEDIA_URL = '/media/'
 # MEDIA_ROOT = BASE_DIR / 'media'
 
-AWS_STORAGE_BUCKET_NAME = "cau-lis-mungo"
+AWS_STORAGE_BUCKET_NAME = "lis-mungo"
 AWS_S3_REGION_NAME = "ap-northeast-2"
 
 AWS_S3_FILE_OVERWRITE = False
@@ -263,4 +263,4 @@ AWS_S3_OBJECT_PARAMETERS = {
     'CacheControl': 'max-age=86400',
 }
 
-DEFAULT_BOOK_IMAGE_URL = "https://cau-lis-mungo.s3.ap-northeast-2.amazonaws.com/books/default.png"
+DEFAULT_BOOK_IMAGE_URL = "https://lis-mungo.s3.ap-northeast-2.amazonaws.com/books/default.png"
