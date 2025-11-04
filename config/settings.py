@@ -131,10 +131,10 @@ DATABASES = {
         # 'PASSWORD':
 		'PASSWORD': DB_PW,
 		# 'HOST': 'localhost',
-        # 'HOST': '127.0.0.1', # 로컬
-        'HOST': RDS_HOST,
-		'PORT': '3306',
-        # 'PORT': '3307', # 로컬
+        'HOST': '127.0.0.1', # 로컬
+        # 'HOST': RDS_HOST,
+		# 'PORT': '3306',
+        'PORT': '3307', # 로컬
         "OPTIONS": {
             "init_command": "SET sql_mode='STRICT_TRANS_TABLES'",
             "connect_timeout": 5,
@@ -167,6 +167,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "https://mungo.p-e.kr",
+    "https://mungo.n-e.kr",
     "https://caumoonjung-lib.netlify.app",
 ]
 
